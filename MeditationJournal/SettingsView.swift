@@ -54,6 +54,10 @@ struct SettingsView: View {
                 Section("Accent color") {
                     accentPicker
                 }
+
+                Section("About") {
+                    LabeledContent("Version", value: appVersion)
+                }
             }
             .navigationTitle("Settings")
             // The goal changes streaks (incl. the widget's precomputed max streak).
@@ -75,6 +79,14 @@ struct SettingsView: View {
                 WidgetCenter.shared.reloadAllTimelines()
             }
         }
+    }
+
+    /// e.g. "1.0 (1)" from the bundle's marketing version + build number.
+    private var appVersion: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = info?["CFBundleVersion"] as? String ?? "1"
+        return "\(version) (\(build))"
     }
 
     /// "70 min", "90 min", "2 h" …
