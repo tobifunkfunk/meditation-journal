@@ -96,6 +96,29 @@ enum MeditationStats {
         return entries.filter { calendar.component(.year, from: $0.date) == year }.reduce(0) { $0 + $1.minutes }
     }
 
+    static func minutesThisMonth(_ entries: [MindfulEntry], calendar: Calendar = .current) -> Int {
+        periodTotals(entries, in: .month, calendar: calendar).minutes
+    }
+
+    /// Minutes in the current calendar period, plus how many of its days have
+    /// elapsed (today counts), so averages don't look artificially low early on.
+    private static func periodTotals(_ entries: [MindfulEntry], in component: Calendar.Component,
+                                     calendar: Calendar) -> (minutes: Int, days: Int) {
+        guard let start = calendar.dateInterval(of: component, for: .now)?.start else { return (0, 1) }
+        let minutes = entries.filter { $0.date >= start }.reduce(0) { $0 + $1.minutes }
+        let today = calendar.startOfDay(for: .now)
+        let elapsed = (calendar.dateComponents([.day], from: calendar.startOfDay(for: start), to: today).day ?? 0) + 1
+        return (minutes, max(1, elapsed))
+    }
+
+    /// Average minutes per elapsed day in the current week / month / year.
+    /// Pass `.weekOfYear`, `.month` or `.year`.
+    static func dailyAverage(_ entries: [MindfulEntry], in component: Calendar.Component,
+                             calendar: Calendar = .current) -> Int {
+        let totals = periodTotals(entries, in: component, calendar: calendar)
+        return Int((Double(totals.minutes) / Double(totals.days)).rounded())
+    }
+
     /// Minutes per day for the last `days` days, oldest first. Empty days = 0.
     static func dailyMinutes(_ entries: [MindfulEntry], days: Int = 7, calendar: Calendar = .current) -> [DayMinutes] {
         let today = calendar.startOfDay(for: .now)

@@ -37,6 +37,8 @@ struct StatisticsView: View {
                     ScrollView {
                         VStack(spacing: 16) {
                             highlights
+                            totalsCard
+                            averagesCard
                             monthlyCard
                             yearlyCard
                             heatmapCard
@@ -60,6 +62,44 @@ struct StatisticsView: View {
             StatTile(value: "\(MeditationStats.currentStreak(entries, minMinutes: streakMinMinutes))", label: "Current streak", symbol: "flame.fill")
             StatTile(value: "\(MeditationStats.longestStreak(entries, minMinutes: streakMinMinutes))", label: "Longest streak", symbol: "trophy.fill")
         }
+    }
+
+    // MARK: Totals & averages (mirrors the widget, plus daily averages)
+
+    private var totalsCard: some View {
+        Card("Totals") {
+            statLine("Today", "\(MeditationStats.minutesToday(entries)) min")
+            statLine("Last 7 days", decimalHours(MeditationStats.minutesInLastDays(entries, days: 7)))
+            statLine("Last 30 days", decimalHours(MeditationStats.minutesInLastDays(entries, days: 30)))
+            statLine("This year", wholeHours(MeditationStats.minutesThisYear(entries)))
+        }
+    }
+
+    private var averagesCard: some View {
+        Card("Daily average") {
+            statLine("This week", "\(MeditationStats.dailyAverage(entries, in: .weekOfYear)) min")
+            statLine("This month", "\(MeditationStats.dailyAverage(entries, in: .month)) min")
+            statLine("This year", "\(MeditationStats.dailyAverage(entries, in: .year)) min")
+        }
+    }
+
+    private func statLine(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 8)
+            Text(value)
+                .font(.subheadline.weight(.semibold))
+        }
+    }
+
+    private func decimalHours(_ minutes: Int) -> String {
+        String(format: "%.1f h", Double(minutes) / 60.0)
+    }
+
+    private func wholeHours(_ minutes: Int) -> String {
+        "\(Int((Double(minutes) / 60).rounded())) h"
     }
 
     // MARK: Monthly
